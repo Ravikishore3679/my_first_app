@@ -1,0 +1,86 @@
+# my_first_app
+
+Construction expense tracker app with local storage and optional Firebase cloud sync.
+
+## Getting Started
+
+This project is a starting point for a Flutter application.
+
+A few resources to get you started if this is your first Flutter project:
+
+- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
+- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
+- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+
+## Firebase Cloud Setup
+
+Cloud sync is enabled when you run with Firebase `--dart-define` values.
+
+1. Create a Firebase project.
+2. Enable Authentication:
+	 - Go to Authentication -> Sign-in method
+	 - Enable Google sign-in
+	 - Add your support email and save
+3. Enable Firestore Database in native mode.
+4. Add temporary Firestore rules (for testing):
+
+```txt
+rules_version = '2';
+service cloud.firestore {
+	match /databases/{database}/documents {
+		match /expense_app_data/{userId}/state/{docId} {
+			allow read, write: if request.auth != null && request.auth.uid == userId;
+		}
+	}
+}
+```
+
+5. Run app with your Firebase config values (from Firebase app settings):
+
+```bash
+flutter run \
+	--dart-define=FIREBASE_API_KEY=AIzaSyBNwNVmsGzF8M1fe5mF4f3KBTFKMSNEv48 \
+	--dart-define=FIREBASE_APP_ID=YOUR_PLATFORM_APP_ID \
+	--dart-define=FIREBASE_MESSAGING_SENDER_ID=534796740132 \
+	--dart-define=FIREBASE_PROJECT_ID=constructionexpensetrack-358ef \
+	--dart-define=FIREBASE_WEB_CLIENT_ID=534796740132-u7ncs9cs745m7tahobkjcbrlh1qd99at.apps.googleusercontent.com
+```
+
+Platform-specific notes:
+	- iPhone must use iOS App ID (contains `:ios:`), not Android App ID.
+	- Android must use Android App ID (contains `:android:`).
+	- iPhone Google sign-in also needs `FIREBASE_IOS_CLIENT_ID` (CLIENT_ID from GoogleService-Info.plist).
+
+Optional defines for some platforms:
+
+```bash
+--dart-define=FIREBASE_AUTH_DOMAIN=YOUR_FIREBASE_AUTH_DOMAIN
+--dart-define=FIREBASE_STORAGE_BUCKET=YOUR_FIREBASE_STORAGE_BUCKET
+--dart-define=FIREBASE_IOS_BUNDLE_ID=YOUR_IOS_BUNDLE_ID
+--dart-define=FIREBASE_IOS_CLIENT_ID=YOUR_FIREBASE_IOS_CLIENT_ID
+```
+
+For iOS, add Google URL scheme config to ios/Runner/Info.plist:
+	- Add `GIDClientID` with `CLIENT_ID` from GoogleService-Info.plist.
+	- Add `CFBundleURLTypes` -> `CFBundleURLSchemes` containing `REVERSED_CLIENT_ID`.
+
+Google sign-in setup reminders:
+	- In Firebase project settings, add Android and iOS apps that match your app package/bundle IDs.
+	- In Firebase Android app settings, add SHA-1 and SHA-256 keys.
+	- Copy `FIREBASE_WEB_CLIENT_ID` from Firebase Console -> Authentication -> Sign-in method -> Google provider.
+
+Without these values, the app automatically uses local storage only.
+
+## Quick Run
+
+Use the saved VS Code launch profile or run:
+
+```bash
+flutter run \
+	--dart-define=FIREBASE_API_KEY=AIzaSyBNwNVmsGzF8M1fe5mF4f3KBTFKMSNEv48 \
+	--dart-define=FIREBASE_APP_ID=YOUR_PLATFORM_APP_ID \
+	--dart-define=FIREBASE_MESSAGING_SENDER_ID=534796740132 \
+	--dart-define=FIREBASE_PROJECT_ID=constructionexpensetrack-358ef \
+	--dart-define=FIREBASE_WEB_CLIENT_ID=534796740132-u7ncs9cs745m7tahobkjcbrlh1qd99at.apps.googleusercontent.com \
+	--dart-define=FIREBASE_IOS_CLIENT_ID=YOUR_FIREBASE_IOS_CLIENT_ID
+```
