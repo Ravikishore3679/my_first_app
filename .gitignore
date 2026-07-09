@@ -43,3 +43,8 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Sensitive local config / credentials
+ios/Runner/.env
+ios/Runner/GoogleService-Info.plist
+macos/Runner/GoogleService-Info.plist
