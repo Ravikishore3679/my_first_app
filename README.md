@@ -84,3 +84,52 @@ flutter run \
 	--dart-define=FIREBASE_WEB_CLIENT_ID=534796740132-u7ncs9cs745m7tahobkjcbrlh1qd99at.apps.googleusercontent.com \
 	--dart-define=FIREBASE_IOS_CLIENT_ID=YOUR_FIREBASE_IOS_CLIENT_ID
 ```
+
+## Firebase App Tester Release Script
+
+Use the release script to build and upload to Firebase App Distribution with version details.
+
+1. Install Firebase CLI and log in:
+
+```bash
+npm install -g firebase-tools
+firebase login
+```
+
+2. Make script executable:
+
+```bash
+chmod +x ./scripts/firebase_app_tester_release.sh
+```
+
+3. Run Android release (recommended):
+
+```bash
+./scripts/firebase_app_tester_release.sh \
+  --platform android \
+  --firebase-app-id 1:1234567890:android:abc123 \
+  --groups qa-team
+```
+
+4. Optional iOS release:
+
+```bash
+./scripts/firebase_app_tester_release.sh \
+  --platform ios \
+  --firebase-app-id 1:1234567890:ios:abc123 \
+  --testers user1@example.com,user2@example.com
+```
+
+Default behavior:
+- Reads current app version from `pubspec.yaml`.
+- Increments build number automatically (for example `1.0.0+1` to `1.0.0+2`).
+- Writes updated version back to `pubspec.yaml`.
+- Builds release artifact and uploads it to Firebase App Distribution.
+
+Useful flags:
+- `--android-artifact apk` to distribute APK (default, best for App Tester).
+- `--android-artifact aab` if your project is linked to Google Play.
+- `--build-name 1.2.0` to set marketing version.
+- `--build-number 45` to set build number.
+- `--release-notes "Fixes login and sync"` to customize release notes.
+- `--skip-version-update` to build/distribute without editing `pubspec.yaml`.

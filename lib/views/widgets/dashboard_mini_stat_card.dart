@@ -14,7 +14,7 @@ class DashboardMiniStatCard extends StatelessWidget {
   final IconData icon;
   final Color color;
 
-  @override
+@override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
