@@ -41,6 +41,7 @@ dependencies:
   firebase_auth: ^6.5.4
   cloud_firestore: ^6.6.0
   google_sign_in: ^7.2.0
+  get_it: ^8.1.0
 
 dev_dependencies:
   flutter_test:
@@ -94,16 +95,3 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
-dependencies:
-  flutter:
-    sdk: flutter
-
-  # Add these exact lines:
-  barcode_widget: ^2.0.4
-  collection: ^1.18.0
-  firebase_core: ^3.0.0
-  firebase_auth: ^5.0.0
-  firebase_messaging: ^15.0.0
-  flutter_facebook_auth: ^7.0.0
-  flutter_signin_button: ^2.0.0
-  google_sign_in: ^6.2.1
