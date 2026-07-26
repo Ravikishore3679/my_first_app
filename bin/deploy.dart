@@ -1,24 +1,37 @@
 import 'dart:io';
+import 'package:yaml/yaml.dart';
+
+//const String firebaseAppId = "YOUR_FIREBASE_ANDROID_APP_ID";
+const String testerGroups = "qa-testers"; // Tester group name in Firebase Console
+// ----------------------------
 
 void main() async {
-  print('🚀 Starting Firebase App Distribution deployment...');
-
-  // 1. Parse pubspec.yaml for the version
   final pubspecFile = File('pubspec.yaml');
   if (!await pubspecFile.exists()) {
-    print('❌ Error: pubspec.yaml file missing!');
+    print("❌ ERROR: pubspec.yaml file not found in current root working directory.");
     exit(1);
   }
-  
-  final pubspecLines = await pubspecFile.readAsLines();
-  String appVersion = '1.0.0+1'; // fallback default
-  for (var line in pubspecLines) {
-    if (line.trim().startsWith('version:')) {
-      appVersion = line.split('version:')[1].trim();
-      break;
-    }
-  }
-  print('📌 App Version detected: $appVersion');
+
+  print("🔄 Reading package settings out of pubspec.yaml...");
+  final pubspecContent = await pubspecFile.readAsString();
+  final doc = loadYaml(pubspecContent);
+  final String currentVersion = doc['version']?.toString() ?? '1.0.0+1';
+
+  // Split version parts out (e.g. 1.0.2+5)
+  final versionParts = currentVersion.split('+');
+  final versionName = versionParts[0];
+  final int currentBuildNumber = int.parse(versionParts[1]);
+  final int nextBuildNumber = currentBuildNumber + 1;
+  final String nextFullVersion = "$versionName+$nextBuildNumber";
+
+  print("🚀 Bumping Android target version string: $currentVersion ➡️ $nextFullVersion");
+
+  // Increment the build code dynamically inside the file string buffer
+  final updatedContent = pubspecContent.replaceFirst(
+    "version: $currentVersion",
+    "version: $nextFullVersion",
+  );
+  await pubspecFile.writeAsString(updatedContent);
 
   // 2. Parse the root .env file
   final envFile = File('.env');
@@ -38,57 +51,69 @@ void main() async {
     }
   }
 
-  final firebaseAppId = env['FIREBASE_APP_ID_ANDROID'];
+  final firebaseAppId = env['FIREBASE_APP_ID'];
   if (firebaseAppId == null || firebaseAppId.isEmpty) {
-    print('❌ Error: FIREBASE_APP_ID_ANDROID missing from .env!');
+    print('❌ Error: FIREBASE_APP_ID missing from .env!');
     exit(1);
   }
 
   // 3. Build the Android Binary with version flags
   print('📦 Step 1: Building Android APK...');
-  final buildResult = await Process.run(
-    'flutter',
-    [
-      'build', 'apk', 
-      '--release', 
-      '--dart-define-from-file=.env',
-      '--dart-define=APP_VERSION=$appVersion' // Passes version to Flutter code
-    ],
-    runInShell: true,
-  );
+  await runCommand('flutter', [
+  'build', 'apk', 
+  '--release', 
+  '--split-per-abi', // ⚡ Splits the single giant APK into 3 small, optimized APKs
+  '--dart-define-from-file=.env'
+]);
+ // Extract metadata dynamically from environment variables or use fallback strings
+  final String commitSha = Platform.environment['GITHUB_SHA'] ?? 'N/A';
+  final String branchName = Platform.environment['GITHUB_REF_NAME'] ?? 'master';
+  final String actor = Platform.environment['GITHUB_ACTOR'] ?? 'Automated Script';
+  final String currentTime = DateTime.now().toUtc().toIso8601String();
 
-  if (buildResult.exitCode != 0) {
-    print(buildResult.stderr);
-    print('❌ Error: Flutter build failed!');
-    exit(buildResult.exitCode);
-  }
+  // Create the formatted release notes string exactly matching your visual layout
+  final String releaseNotes = '''
+🚀 Multi-Environment Build #15
+
+🌍 Environment: development
+📱 Version: $nextFullVersion
+
+📝 Build Type: 🔓 Development/Testing (All Environments)
+🔄 Runtime Switching: Enabled (Flexibility)
+
+📋 Action: Build and Deploy
+👤 Triggered by: $actor
+
+🔗 Commit: $commitSha
+🌿 Branch: $branchName
+📅 Built at: $currentTime
+''';  
+
   print('✅ APK built successfully.');
 
   // 4. Deploy to Firebase App Distribution
   print('📲 Step 2: Uploading to Firebase App Distribution...');
-  final apkPath = 'build/app/outputs/flutter-apk/app-release.apk';
+  
+ await runCommand('firebase', [
+    'appdistribution:distribute',
+    'build/app/outputs/flutter-apk/app-arm64-v8a-release.apk',
+    '--app', firebaseAppId,
+    '--groups', testerGroups,
+    '--release-notes', releaseNotes 
+  ]);
 
-  final process = await Process.start(
-    'firebase',
-    [
-      'appdistribution:distribute',
-      apkPath,
-      '--app', firebaseAppId,
-      '--groups', 'qa-testers',
-      '--release-notes', 'Version $appVersion automated release.' // Injected here
-    ],
-    runInShell: true,
-  );
-
+    print("\n✅ Deployment successful! Build version $nextFullVersion is live.");
+}
+Future<void> runCommand(String executable, List<String> arguments) async {
+  final process = await Process.start(executable, arguments, runInShell: true);
   await stdout.addStream(process.stdout);
   await stderr.addStream(process.stderr);
 
   final exitCode = await process.exitCode;
 
-  if (exitCode == 0) {
-    print('🎉 Success! Version $appVersion sent to testers.');
-  } else {
-    print('❌ Error: Firebase upload failed!');
+ 
+  if (exitCode != 0) {
+    print("❌ Critical breakdown: Command '$executable ${arguments.join(' ')}' exited with code $exitCode");
     exit(exitCode);
   }
 }
