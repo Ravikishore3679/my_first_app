@@ -13,9 +13,14 @@ import 'widgets/manage_sites_dialog.dart';
 import 'widgets/site_expense_chart.dart';
 
 class ExpenseHomePage extends StatefulWidget {
-  const ExpenseHomePage({super.key, required this.viewModel});
+  const ExpenseHomePage({
+    super.key,
+    required this.viewModel,
+    this.onLogout,
+  });
 
   final ExpenseViewModel viewModel;
+  final VoidCallback? onLogout;
 
   @override
   State<ExpenseHomePage> createState() => _ExpenseHomePageState();
@@ -44,6 +49,17 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
     );
+  }
+
+  Future<void> _logout() async {
+    final message = await vm.signOutGoogle();
+    if (!mounted) return;
+    if (message != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
+      );
+    }
+    widget.onLogout?.call();
   }
 
   void _showAddExpenseDialog() {
@@ -748,13 +764,9 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
                 ),
               ),
               IconButton(
-                icon: Icon(vm.cloudStore.isEnabled ? Icons.logout : Icons.login),
-                tooltip: vm.cloudStore.isEnabled
-                    ? 'Sign out Google'
-                    : 'Sign in Google',
-                onPressed: vm.cloudStore.isEnabled
-                    ? () => _showMessageFrom(vm.signOutGoogle())
-                    : () => _showMessageFrom(vm.signInWithGoogle()),
+                icon: const Icon(Icons.logout),
+                tooltip: 'Logout',
+                onPressed: _logout,
               ),
               if (vm.selectedIndex == 2)
                 IconButton(

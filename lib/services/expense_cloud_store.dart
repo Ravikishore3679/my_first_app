@@ -143,6 +143,43 @@ class ExpenseCloudStore {
     return auth.currentUser != null;
   }
 
+  Future<void> signInWithEmailAndPassword({
+    required String email,
+    required String password,
+  }) async {
+    final auth = _auth;
+    if (auth == null) {
+      throw StateError('Firebase authentication is not configured');
+    }
+
+    await auth.signInWithEmailAndPassword(
+      email: email.trim(),
+      password: password,
+    );
+  }
+
+  Future<void> createUserWithEmailAndPassword({
+    required String name,
+    required String email,
+    required String password,
+  }) async {
+    final auth = _auth;
+    if (auth == null) {
+      throw StateError('Firebase authentication is not configured');
+    }
+
+    final credential = await auth.createUserWithEmailAndPassword(
+      email: email.trim(),
+      password: password,
+    );
+
+    final trimmedName = name.trim();
+    if (trimmedName.isNotEmpty) {
+      await credential.user?.updateDisplayName(trimmedName);
+      await credential.user?.reload();
+    }
+  }
+
   Future<void> signOut() async {
     try {
       await _googleSignIn?.signOut();
@@ -230,13 +267,31 @@ class ExpenseCloudStore {
       return 'sign-in cancelled';
     }
     if (normalized.contains('auth/operation-not-allowed')) {
-      return 'Google provider is not enabled in Firebase Authentication';
+      return 'Email/password login is not enabled in Firebase Authentication';
+    }
+    if (normalized.contains('stateerror')) {
+      return 'Firebase is not configured for authentication';
+    }
+    if (normalized.contains('auth/user-not-found')) {
+      return 'No account found for this email';
+    }
+    if (normalized.contains('auth/wrong-password')) {
+      return 'Incorrect email or password';
+    }
+    if (normalized.contains('auth/email-already-in-use')) {
+      return 'This email is already registered';
+    }
+    if (normalized.contains('auth/weak-password')) {
+      return 'Password is too weak (minimum 6 characters)';
+    }
+    if (normalized.contains('auth/invalid-email')) {
+      return 'Invalid email format';
     }
     if (normalized.contains('auth/unauthorized-domain')) {
       return 'web domain is not authorized in Firebase Authentication settings';
     }
     if (normalized.contains('auth/invalid-credential')) {
-      return 'Google credential rejected; verify Android SHA keys and OAuth client setup';
+      return 'Incorrect email or password';
     }
     if (normalized.contains('developer_error') ||
         normalized.contains('apiexception: 10') ||
@@ -272,7 +327,7 @@ class ExpenseCloudStore {
         normalized.contains('failed host lookup')) {
       return 'network unavailable';
     }
-    return 'check Firebase --dart-define values and platform-specific Google Sign-In setup';
+    return 'check Firebase --dart-define values and Authentication configuration';
   }
 
   String compactError(Object error) {

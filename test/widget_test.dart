@@ -11,11 +11,13 @@ import 'package:my_first_app/app.dart';
 import 'package:my_first_app/core/di/service_locator.dart';
 
 void main() {
-  testWidgets('App shows tracker title', (WidgetTester tester) async {
+  testWidgets('App shows CET login screen', (WidgetTester tester) async {
     await setupDependencies();
     await tester.pumpWidget(const ExpenseTrackerApp());
-    await tester.pump(const Duration(milliseconds: 600));
+    await tester.pump();
 
-    expect(find.text('Construction Expense Tracker'), findsOneWidget);
+    expect(find.text('CET'), findsWidgets);
+    expect(find.text('Email'), findsOneWidget);
+    expect(find.text('Name'), findsOneWidget);
   });
 }

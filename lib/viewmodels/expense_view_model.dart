@@ -207,6 +207,58 @@ class ExpenseViewModel extends ChangeNotifier {
     }
   }
 
+  Future<String?> signInWithEmail({
+    required String email,
+    required String password,
+  }) async {
+    if (!cloudStore.isConfigured) {
+      return 'Firebase config missing: ${cloudStore.missingRunValues.join(', ')}';
+    }
+
+    try {
+      await cloudStore.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      final loadMessage = await initialize();
+      if (loadMessage != null) {
+        return loadMessage;
+      }
+
+      return null;
+    } catch (error) {
+      return cloudStore.friendlyCloudError(error);
+    }
+  }
+
+  Future<String?> signUpWithEmail({
+    required String name,
+    required String email,
+    required String password,
+  }) async {
+    if (!cloudStore.isConfigured) {
+      return 'Firebase config missing: ${cloudStore.missingRunValues.join(', ')}';
+    }
+
+    try {
+      await cloudStore.createUserWithEmailAndPassword(
+        name: name,
+        email: email,
+        password: password,
+      );
+
+      final loadMessage = await initialize();
+      if (loadMessage != null) {
+        return loadMessage;
+      }
+
+      return null;
+    } catch (error) {
+      return cloudStore.friendlyCloudError(error);
+    }
+  }
+
   Future<String?> signOutGoogle() async {
     try {
       await cloudStore.signOut();
