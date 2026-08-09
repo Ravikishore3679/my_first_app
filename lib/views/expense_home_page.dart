@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../core/theme/app_colors.dart';
 import '../models/expense_entry.dart';
 import '../viewmodels/expense_view_model.dart';
 import 'widgets/category_icon.dart';
@@ -135,7 +136,7 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFFE8F8F4), Color(0xFFF7F4EC)],
+          colors: [kSandBackground, kSandSurface],
         ),
       ),
       child: SingleChildScrollView(
@@ -151,13 +152,13 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(22),
                     gradient: const LinearGradient(
-                      colors: [Color(0xFF0F766E), Color(0xFF0EA5A1)],
+                      colors: [kStonePrimary, kStoneSecondary],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     boxShadow: const [
                       BoxShadow(
-                        color: Color(0x330F766E),
+                        color: Color(0x336D6558),
                         blurRadius: 16,
                         offset: Offset(0, 8),
                       ),
@@ -170,7 +171,7 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
                         'Total Expenditure',
                         style: TextStyle(
                           fontSize: 14,
-                          color: Color(0xFFE7FBF8),
+                          color: Color(0xFFF7EFE6),
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -187,7 +188,7 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
                         '${vm.entries.length} payments recorded',
                         style: const TextStyle(
                           fontSize: 13,
-                          color: Color(0xFFD8F8F3),
+                          color: Color(0xFFE8D8C0),
                         ),
                       ),
                     ],
@@ -259,7 +260,7 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
                       children: [
                         const Row(
                           children: [
-                            Icon(Icons.sunny, color: Color(0xFF2563EB)),
+                            Icon(Icons.sunny, color: kStonePrimary),
                             SizedBox(width: 8),
                             Text(
                               "Today's Expenses",
@@ -285,7 +286,7 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF2563EB),
+                              color: kStonePrimary,
                             ),
                           ),
                           const SizedBox(height: 12),
@@ -321,7 +322,7 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
                                     '₹${entry.amount}',
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
-                                      color: Color(0xFF2563EB),
+                                      color: kStonePrimary,
                                     ),
                                   ),
                                 ],
@@ -352,7 +353,7 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
                           children: [
                             Icon(
                               Icons.bar_chart_rounded,
-                              color: Color(0xFF0F766E),
+                              color: kStonePrimary,
                             ),
                             SizedBox(width: 8),
                             Text(
@@ -417,9 +418,9 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: kSandSurface,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0x14000000)),
+                border: Border.all(color: const Color(0x14A58F6D)),
               ),
               child: vm.entries.isEmpty
                   ? const Center(
@@ -480,7 +481,7 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
                                 ),
                               ),
                               IconButton(
-                                icon: const Icon(Icons.edit, color: Colors.orange),
+                                icon: const Icon(Icons.edit, color: kStoneAccent),
                                 tooltip: 'Edit',
                                 onPressed: () => _showEditExpenseDialog(entry),
                               ),
@@ -600,7 +601,7 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Card(
-                  color: Colors.orange.shade50,
+                  color: const Color(0xFFF4EBDD),
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Column(
@@ -616,7 +617,7 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
                           style: const TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
-                            color: Colors.orange,
+                            color: kStonePrimary,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -748,7 +749,7 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
                 gradient: LinearGradient(
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight,
-                  colors: [Color(0xFF0F766E), Color(0xFF155E75)],
+                  colors: [kStonePrimary, kStoneSecondary],
                 ),
               ),
             ),
@@ -760,7 +761,7 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
                       ? Icons.cloud_done
                       : (vm.cloudStore.isConfigured ? Icons.cloud_queue : Icons.cloud_off),
                   size: 20,
-                  color: const Color(0xFFD8F8F3),
+                  color: const Color(0xFFF7EFE6),
                 ),
               ),
               IconButton(
@@ -790,10 +791,10 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
             children: [
               if (!vm.cloudStore.isConfigured)
                 MaterialBanner(
-                  backgroundColor: const Color(0xFFFFF3CD),
+                  backgroundColor: const Color(0xFFF4EBDD),
                   content: Text(
                     'Firebase config missing: ${vm.cloudStore.missingRunValues.join(', ')}',
-                    style: const TextStyle(color: Color(0xFF7A5C00)),
+                    style: const TextStyle(color: kStoneText),
                   ),
                   actions: const [SizedBox.shrink()],
                 ),

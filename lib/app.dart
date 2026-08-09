@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'core/di/service_locator.dart';
+import 'core/theme/app_colors.dart';
 import 'services/expense_cloud_store.dart';
 import 'viewmodels/expense_view_model.dart';
 import 'views/expense_home_page.dart';
@@ -40,9 +41,28 @@ class _ExpenseTrackerAppState extends State<ExpenseTrackerApp> {
       title: 'Construction Expense Tracker',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF0E8E7D)),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: kStonePrimary,
+          primary: kStonePrimary,
+          secondary: kStoneSecondary,
+          surface: kSandSurface,
+          onSurface: kStoneText,
+        ),
         useMaterial3: true,
-        scaffoldBackgroundColor: const Color(0xFFF4F8F7),
+        scaffoldBackgroundColor: kSandBackground,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: kStonePrimary,
+          foregroundColor: Colors.white,
+        ),
+        cardColor: kSandSurface,
+        dividerColor: const Color(0xFFE7DCCB),
+        inputDecorationTheme: const InputDecorationTheme(
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: kStonePrimary, width: 1.7),
+          ),
+          border: OutlineInputBorder(),
+          labelStyle: TextStyle(color: kStoneMuted),
+        ),
       ),
       home: _isAuthenticated
           ? ExpenseHomePage(

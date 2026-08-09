@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_colors.dart';
+
 class CategoryIcon extends StatelessWidget {
   const CategoryIcon({super.key, required this.category});
 
@@ -8,10 +10,10 @@ class CategoryIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CircleAvatar(
-      backgroundColor: Colors.orange.shade100,
+      backgroundColor: const Color(0xFFE8D8C0),
       child: Icon(
         _iconForCategory(category),
-        color: Colors.orange.shade900,
+        color: kStonePrimary,
         size: 20,
       ),
     );

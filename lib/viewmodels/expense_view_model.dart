@@ -195,12 +195,8 @@ class ExpenseViewModel extends ChangeNotifier {
         return 'Google sign-in was cancelled.';
       }
 
-      final loadMessage = await initialize();
-      if (loadMessage != null) {
-        return loadMessage;
-      }
-
-      return 'Synced with ${cloudStore.signedInEmail ?? 'your Google account'}.';
+      await initialize();
+      return null;
     } catch (error) {
       final raw = cloudStore.compactError(error);
       return 'Google sign-in failed: ${cloudStore.friendlyCloudError(error)} ($raw)';

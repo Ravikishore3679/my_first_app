@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../core/di/service_locator.dart';
+import '../core/theme/app_colors.dart';
+import '../services/expense_cloud_store.dart';
 import '../viewmodels/expense_view_model.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -65,6 +67,32 @@ class _LoginScreenState extends State<LoginScreen> {
     widget.onLoginSuccess();
   }
 
+  Future<void> _signInWithGoogle() async {
+    setState(() {
+      _submitting = true;
+    });
+
+    final vm = serviceLocator<ExpenseViewModel>();
+    final message = await vm.signInWithGoogle();
+
+    if (!mounted) return;
+
+    setState(() {
+      _submitting = false;
+    });
+
+    if (message != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+      return;
+    }
+
+    if (serviceLocator<ExpenseCloudStore>().isEnabled) {
+      widget.onLoginSuccess();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -73,7 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFFE8F8F4), Color(0xFFF7F4EC)],
+            colors: [kSandBackground, kSandSurface],
           ),
         ),
         child: Center(
@@ -98,7 +126,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           fontWeight: FontWeight.w800,
-                          color: const Color(0xFF0F766E),
+                          color: kStonePrimary,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -106,7 +134,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         'Construction Expense Tracker',
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Colors.grey[700],
+                          color: kStoneMuted,
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -182,6 +210,32 @@ class _LoginScreenState extends State<LoginScreen> {
                         label: Text(_creatingAccount ? 'Create Account' : 'Login'),
                         style: FilledButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 14),
+                          backgroundColor: kStonePrimary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: const [
+                          Expanded(child: Divider()),
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 12),
+                            child: Text('OR'),
+                          ),
+                          Expanded(child: Divider()),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed: _submitting ? null : _signInWithGoogle,
+                        icon: const Icon(Icons.mail_outline),
+                        label: const Text('Continue with Google'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          side: const BorderSide(color: kStonePrimary),
+                          foregroundColor: kStonePrimary,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),

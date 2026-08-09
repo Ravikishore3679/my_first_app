@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_colors.dart';
+
 class DashboardMiniStatCard extends StatelessWidget {
   const DashboardMiniStatCard({
     super.key,
@@ -19,7 +21,7 @@ class DashboardMiniStatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: kSandSurface,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -35,7 +37,7 @@ class DashboardMiniStatCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(fontSize: 12, color: Colors.black54),
+                  style: const TextStyle(fontSize: 12, color: kStoneMuted),
                 ),
                 Text(
                   value,

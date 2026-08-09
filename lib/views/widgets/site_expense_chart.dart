@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_colors.dart';
+
 class SiteExpenseChart extends StatelessWidget {
   const SiteExpenseChart({super.key, required this.siteTotals});
 
@@ -11,12 +13,12 @@ class SiteExpenseChart extends StatelessWidget {
       ..sort((a, b) => b.value.compareTo(a.value));
     final highest = sorted.first.value;
     const palette = <Color>[
-      Color(0xFF0EA5A1),
-      Color(0xFF2563EB),
-      Color(0xFFF97316),
-      Color(0xFF7C3AED),
-      Color(0xFFDC2626),
-      Color(0xFF16A34A),
+      kStonePrimary,
+      kStoneSecondary,
+      kStoneAccent,
+      Color(0xFFB89A6C),
+      Color(0xFF8C7A5B),
+      Color(0xFF6D6558),
     ];
 
     return Column(
