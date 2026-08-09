@@ -27,6 +27,7 @@ class ExpenseCloudStore {
   bool get isConfigured => _firestore != null && _auth != null;
   bool get isEnabled => isConfigured && _auth?.currentUser != null;
   String? get signedInEmail => _auth?.currentUser?.email;
+  String? get currentUserId => _auth?.currentUser?.uid;
 
   static Future<ExpenseCloudStore> create() async {
     final apiKey = const String.fromEnvironment('FIREBASE_API_KEY');

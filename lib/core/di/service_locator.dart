@@ -15,7 +15,7 @@ Future<void> setupDependencies() async {
 
   serviceLocator.registerSingleton<ExpenseCloudStore>(cloudStore);
   serviceLocator.registerLazySingleton<ExpenseLocalStore>(() => const ExpenseLocalStore());
-  serviceLocator.registerFactory<ExpenseViewModel>(
+  serviceLocator.registerLazySingleton<ExpenseViewModel>(
     () => ExpenseViewModel(
       cloudStore: serviceLocator<ExpenseCloudStore>(),
       localStore: serviceLocator<ExpenseLocalStore>(),

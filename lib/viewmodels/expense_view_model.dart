@@ -31,6 +31,7 @@ class ExpenseViewModel extends ChangeNotifier {
 
   int _selectedIndex = 0;
   bool _loading = true;
+  String? _lastSignedInUserId;
 
   String? _filterCategory;
   String? _filterSite;
@@ -139,6 +140,20 @@ class ExpenseViewModel extends ChangeNotifier {
   }
 
   Future<String?> initialize() async {
+    final currentUserId = cloudStore.currentUserId;
+    final userChanged = currentUserId != null &&
+        _lastSignedInUserId != null &&
+        _lastSignedInUserId != currentUserId;
+
+    if (userChanged) {
+      _categories = List<String>.from(defaultCategories);
+      _sites = [];
+      _entries.clear();
+      await _saveLocalData();
+    }
+
+    _lastSignedInUserId = currentUserId;
+
     final localSnapshot = await localStore.load(defaultCategories: defaultCategories);
 
     _categories = localSnapshot.categories;
