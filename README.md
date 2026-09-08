@@ -133,3 +133,11 @@ Useful flags:
 - `--build-number 45` to set build number.
 - `--release-notes "Fixes login and sync"` to customize release notes.
 - `--skip-version-update` to build/distribute without editing `pubspec.yaml`.
+
+
+optional
+
+FIREBASE_AUTH_DOMAIN=constructionexpensetrack-358ef.firebaseapp.com
+FIREBASE_STORAGE_BUCKET=constructionexpensetrack-358ef.firebasestorage.app
+FIREBASE_IOS_BUNDLE_ID=com.ravi.myFirstApp
+FIREBASE_IOS_CLIENT_ID=534796740132-i4ljrm4rar1dsi29pt055fdo069mmgnt.apps.googleusercontent.com

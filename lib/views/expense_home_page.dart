@@ -5,6 +5,7 @@ import 'package:share_plus/share_plus.dart';
 import '../core/theme/app_colors.dart';
 import '../models/expense_entry.dart';
 import '../viewmodels/expense_view_model.dart';
+import 'budget_estimator_screen.dart';
 import 'widgets/category_icon.dart';
 import 'widgets/dashboard_mini_stat_card.dart';
 import 'widgets/expense_dialog.dart';
@@ -497,6 +498,10 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
     );
   }
 
+  Widget _buildBudgetPage() {
+    return BudgetEstimatorScreen(viewModel: vm);
+  }
+
   Widget _buildReportsPage() {
     return Column(
       children: [
@@ -735,6 +740,7 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
           _buildDashboardPage(),
           _buildExpensesPage(),
           _buildReportsPage(),
+          _buildBudgetPage(),
         ];
 
         return Scaffold(
@@ -811,6 +817,10 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
               ),
               NavigationDestination(icon: Icon(Icons.list_alt), label: 'Expenses'),
               NavigationDestination(icon: Icon(Icons.pie_chart), label: 'Reports'),
+              NavigationDestination(
+                icon: Icon(Icons.calculate_outlined),
+                label: 'Budget',
+              ),
             ],
           ),
         );

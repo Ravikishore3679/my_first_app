@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "534796740132",
+    "project_id": "constructionexpensetrack-358ef",
+    "storage_bucket": "constructionexpensetrack-358ef.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:534796740132:android:89105d9cfd5f6e8ff05ab1",
+        "android_client_info": {
+          "package_name": "com.example.my_first_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "534796740132-vhg1n9r2g6n2u9856o1b50flol3aionq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.my_first_app",
+            "certificate_hash": "33dcddcf362ef9ab01235d6f883738f7919b9cc7"
+          }
+        },
+        {
+          "client_id": "534796740132-u7ncs9cs745m7tahobkjcbrlh1qd99at.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBNwNVmsGzF8M1fe5mF4f3KBTFKMSNEv48"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "534796740132-u7ncs9cs745m7tahobkjcbrlh1qd99at.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "534796740132-i4ljrm4rar1dsi29pt055fdo069mmgnt.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.ravi.myFirstApp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
