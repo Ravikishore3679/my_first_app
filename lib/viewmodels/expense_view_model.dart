@@ -28,6 +28,7 @@ class ExpenseViewModel extends ChangeNotifier {
   List<String> _categories = List.from(defaultCategories);
   List<String> _sites = [];
   final List<ExpenseEntry> _entries = [];
+  final Map<String, double> _siteSftValues = {};
 
   int _selectedIndex = 0;
   bool _loading = true;
@@ -41,6 +42,7 @@ class ExpenseViewModel extends ChangeNotifier {
   List<String> get categories => _categories;
   List<String> get sites => _sites;
   List<ExpenseEntry> get entries => _entries;
+  Map<String, double> get siteSftValues => Map.unmodifiable(_siteSftValues);
   int get selectedIndex => _selectedIndex;
   bool get loading => _loading;
 
@@ -90,7 +92,60 @@ class ExpenseViewModel extends ChangeNotifier {
     return totals;
   }
 
+  Map<String, double> get siteCostPerSft {
+    final result = <String, double>{};
+    for (final entry in siteTotals.entries) {
+      final siteName = entry.key;
+      final siteSft = _siteSftValues[siteName] ?? 0;
+      if (siteSft <= 0) continue;
+      result[siteName] = entry.value / siteSft;
+    }
+    return result;
+  }
+
   int get totalSites => siteTotals.length;
+
+  double get overallCostPerSft {
+    final effectiveSiteTotals = <String, int>{};
+    for (final entry in _entries) {
+      final siteName = entry.site.trim();
+      if (siteName.isEmpty) continue;
+      effectiveSiteTotals.update(
+        siteName,
+        (value) => value + entry.amount,
+        ifAbsent: () => entry.amount,
+      );
+    }
+
+    var totalSiteCost = 0;
+    var totalSiteSft = 0.0;
+    for (final entry in effectiveSiteTotals.entries) {
+      final siteName = entry.key;
+      final siteSft = _siteSftValues[siteName] ?? 0;
+      if (siteSft <= 0) continue;
+      totalSiteCost += entry.value;
+      totalSiteSft += siteSft;
+    }
+
+    if (totalSiteSft <= 0) return 0;
+    return totalSiteCost / totalSiteSft;
+  }
+
+  void setSiteSftValue(String site, String value) {
+    final trimmedSite = site.trim();
+    if (trimmedSite.isEmpty) return;
+
+    final parsed = double.tryParse(value.replaceAll(',', '').trim()) ?? 0;
+    if (parsed <= 0) {
+      _siteSftValues.remove(trimmedSite);
+      notifyListeners();
+      return;
+    }
+
+    _siteSftValues[trimmedSite] = parsed;
+    notifyListeners();
+    _saveLocalData();
+  }
 
   List<ExpenseEntry> get filteredEntries {
     return _entries.where((e) {
@@ -161,6 +216,9 @@ class ExpenseViewModel extends ChangeNotifier {
     _entries
       ..clear()
       ..addAll(localSnapshot.entries);
+    _siteSftValues
+      ..clear()
+      ..addAll(localSnapshot.siteSftValues);
     _loading = false;
     notifyListeners();
 
@@ -401,6 +459,7 @@ class ExpenseViewModel extends ChangeNotifier {
       categories: _categories,
       sites: _sites,
       entries: _entries,
+      siteSftValues: _siteSftValues,
     );
   }
 

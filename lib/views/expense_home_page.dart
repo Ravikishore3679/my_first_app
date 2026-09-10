@@ -218,6 +218,13 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
                             icon: Icons.today,
                             color: const Color(0xFFDC2626),
                           ),
+                          const SizedBox(height: 10),
+                          DashboardMiniStatCard(
+                            title: 'Overall Cost/SFT',
+                            value: '₹${vm.overallCostPerSft.toStringAsFixed(2)}',
+                            icon: Icons.straighten,
+                            color: const Color(0xFF059669),
+                          ),
                         ],
                       );
                     }
@@ -238,6 +245,15 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
                             value: '₹${vm.todayAmount}',
                             icon: Icons.today,
                             color: const Color(0xFFDC2626),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: DashboardMiniStatCard(
+                            title: 'Overall Cost/SFT',
+                            value: '₹${vm.overallCostPerSft.toStringAsFixed(2)}',
+                            icon: Icons.straighten,
+                            color: const Color(0xFF059669),
                           ),
                         ),
                       ],
@@ -375,8 +391,12 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
                               style: TextStyle(color: Colors.black54),
                             ),
                           )
-                        else
-                          SiteExpenseChart(siteTotals: vm.siteTotals),
+                        else ...[
+                          SiteExpenseChart(
+                            siteTotals: vm.siteTotals,
+                            siteSftValues: vm.siteSftValues,
+                          ),
+                        ],
                       ],
                     ),
                   ),

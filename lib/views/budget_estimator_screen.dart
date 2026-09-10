@@ -48,6 +48,7 @@ class _BudgetEstimatorScreenState extends State<BudgetEstimatorScreen> {
 
   String? _selectedSite;
   List<BudgetCategoryRow> _categories = const [];
+  final Map<String, Map<String, double>> _siteCategoryTotals = {};
 
   @override
   void initState() {
@@ -85,40 +86,70 @@ class _BudgetEstimatorScreenState extends State<BudgetEstimatorScreen> {
     return totals;
   }
 
+  void _saveCurrentSiteCategoryValues() {
+    final siteName = (_selectedSite ?? '').trim();
+    if (siteName.isEmpty) return;
+
+    final values = <String, double>{};
+    for (final row in _categories) {
+      final name = row.name.trim();
+      if (name.isEmpty) continue;
+      final total = row.totalCost;
+      if (total > 0) {
+        values[name] = total;
+      }
+    }
+
+    _siteCategoryTotals[siteName] = values;
+  }
+
+  void _saveCurrentSiteSft() {
+    final siteName = (_selectedSite ?? '').trim();
+    if (siteName.isEmpty) return;
+    widget.viewModel.setSiteSftValue(siteName, _totalSftController.text);
+  }
+
+  void _applySiteSftValue(String? site) {
+    final siteName = (site ?? '').trim();
+    final savedValue = siteName.isEmpty ? null : widget.viewModel.siteSftValues[siteName];
+    final value = savedValue != null ? savedValue.toStringAsFixed(0) : '100';
+    if (_totalSftController.text != value) {
+      _totalSftController.text = value;
+    }
+  }
+
   void _syncCategoriesForSelectedSite() {
     final siteTotals = _siteExpenseTotals();
-    final previousRows = {
-      for (final row in _categories) row.name.toLowerCase(): row,
-    };
+    final siteName = (_selectedSite ?? '').trim();
+    final savedSiteTotals = _siteCategoryTotals[siteName] ?? <String, double>{};
 
     final names = <String>{};
-    for (final category in widget.viewModel.categories) {
-      if (category.trim().isNotEmpty) names.add(category.trim());
-    }
     for (final category in siteTotals.keys) {
       names.add(category.trim());
     }
-    for (final row in previousRows.values) {
-      if (row.name.trim().isNotEmpty) names.add(row.name.trim());
+    for (final category in savedSiteTotals.keys) {
+      final trimmed = category.trim();
+      if (trimmed.isNotEmpty && (savedSiteTotals[trimmed] ?? 0) > 0) {
+        names.add(trimmed);
+      }
     }
 
     final rows = <BudgetCategoryRow>[];
     for (final name in names) {
       final normalizedName = name.trim();
       if (normalizedName.isEmpty) continue;
-      final previousRow = previousRows[normalizedName.toLowerCase()];
-      final total = siteTotals[normalizedName] ?? previousRow?.totalCost ?? 0;
+      final total = siteTotals[normalizedName] ?? savedSiteTotals[normalizedName] ?? 0;
+      if (total <= 0) continue;
       rows.add(BudgetCategoryRow(name: normalizedName, totalCost: total));
     }
 
-    if (rows.isEmpty) {
-      rows.addAll([
-        BudgetCategoryRow(name: 'Bricks', totalCost: 0),
-        BudgetCategoryRow(name: 'Steel', totalCost: 0),
-      ]);
-    }
-
     _categories = rows;
+    if (siteName.isNotEmpty) {
+      _siteCategoryTotals[siteName] = {
+        for (final row in rows) row.name: row.totalCost,
+      };
+    }
+    _applySiteSftValue(siteName.isEmpty ? null : siteName);
   }
 
   double get _totalEstimatedSft {
@@ -145,6 +176,8 @@ class _BudgetEstimatorScreenState extends State<BudgetEstimatorScreen> {
 
   void _onSiteChanged(String? value) {
     if (value == null) return;
+    _saveCurrentSiteCategoryValues();
+    _saveCurrentSiteSft();
     setState(() {
       _selectedSite = value;
       _syncCategoriesForSelectedSite();
@@ -213,7 +246,7 @@ class _BudgetEstimatorScreenState extends State<BudgetEstimatorScreen> {
                         children: [
                           Expanded(
                             child: DropdownButtonFormField<String>(
-                              value: _selectedSite,
+                              initialValue: _selectedSite,
                               isExpanded: true,
                               decoration: const InputDecoration(
                                 labelText: 'SITE',
@@ -234,7 +267,10 @@ class _BudgetEstimatorScreenState extends State<BudgetEstimatorScreen> {
                           Expanded(
                             child: TextFormField(
                               controller: _totalSftController,
-                              onChanged: (_) => setState(() {}),
+                              onChanged: (_) {
+                                _saveCurrentSiteSft();
+                                setState(() {});
+                              },
                               keyboardType: const TextInputType.numberWithOptions(
                                 decimal: true,
                               ),
@@ -303,7 +339,10 @@ class _BudgetEstimatorScreenState extends State<BudgetEstimatorScreen> {
                                         DataCell(
                                           TextFormField(
                                             controller: item.nameController,
-                                            onChanged: (_) => setState(() {}),
+                                            onChanged: (_) {
+                                              _saveCurrentSiteCategoryValues();
+                                              setState(() {});
+                                            },
                                             decoration: const InputDecoration(
                                               border: InputBorder.none,
                                               isDense: true,
@@ -313,7 +352,10 @@ class _BudgetEstimatorScreenState extends State<BudgetEstimatorScreen> {
                                         DataCell(
                                           TextFormField(
                                             controller: item.costController,
-                                            onChanged: (_) => setState(() {}),
+                                            onChanged: (_) {
+                                              _saveCurrentSiteCategoryValues();
+                                              setState(() {});
+                                            },
                                             keyboardType: const TextInputType.numberWithOptions(
                                               decimal: true,
                                             ),

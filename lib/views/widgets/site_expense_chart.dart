@@ -3,9 +3,14 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 
 class SiteExpenseChart extends StatelessWidget {
-  const SiteExpenseChart({super.key, required this.siteTotals});
+  const SiteExpenseChart({
+    super.key,
+    required this.siteTotals,
+    this.siteSftValues = const {},
+  });
 
   final Map<String, int> siteTotals;
+  final Map<String, double> siteSftValues;
 
   @override
   Widget build(BuildContext context) {
@@ -24,11 +29,13 @@ class SiteExpenseChart extends StatelessWidget {
     return Column(
       children: List.generate(sorted.length, (index) {
         final entry = sorted[index];
+        final siteSft = siteSftValues[entry.key] ?? 0;
         return Padding(
           padding: const EdgeInsets.only(bottom: 12.0),
           child: _SiteBarRow(
             siteName: entry.key,
             amount: entry.value,
+            perSft: siteSft > 0 ? entry.value / siteSft : null,
             maxAmount: highest,
             barColor: palette[index % palette.length],
           ),
@@ -42,12 +49,14 @@ class _SiteBarRow extends StatelessWidget {
   const _SiteBarRow({
     required this.siteName,
     required this.amount,
+    required this.perSft,
     required this.maxAmount,
     required this.barColor,
   });
 
   final String siteName;
   final int amount;
+  final double? perSft;
   final int maxAmount;
   final Color barColor;
 
@@ -68,9 +77,38 @@ class _SiteBarRow extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            Text(
-              '₹$amount',
-              style: const TextStyle(fontWeight: FontWeight.bold),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '₹$amount',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                if (perSft != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: kStonePrimary.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: kStonePrimary.withValues(alpha: 0.15),
+                          width: 1,
+                        ),
+                      ),
+                      child: Text(
+                        '₹${perSft!.toStringAsFixed(2)}/SFT',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: kStonePrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ],
         ),

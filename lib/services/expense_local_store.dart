@@ -11,6 +11,7 @@ class LocalSnapshot {
     required this.categories,
     required this.sites,
     required this.entries,
+    this.siteSftValues = const {},
   });
 
   final bool hasCustomCategories;
@@ -18,6 +19,7 @@ class LocalSnapshot {
   final List<String> categories;
   final List<String> sites;
   final List<ExpenseEntry> entries;
+  final Map<String, double> siteSftValues;
 }
 
 class ExpenseLocalStore {
@@ -26,6 +28,7 @@ class ExpenseLocalStore {
   static const String expensesKey = 'construction_expenses';
   static const String categoriesKey = 'construction_categories';
   static const String sitesKey = 'construction_sites';
+  static const String siteSftValuesKey = 'construction_site_sft_values';
 
   Future<LocalSnapshot> load({required List<String> defaultCategories}) async {
     final prefs = await SharedPreferences.getInstance();
@@ -48,12 +51,20 @@ class ExpenseLocalStore {
         ? (jsonDecode(prefs.getString(sitesKey)!) as List<dynamic>).cast<String>()
         : _deriveSitesFromEntries(entries);
 
+    final rawSiteSftValues = prefs.getString(siteSftValuesKey);
+    final siteSftValues = rawSiteSftValues == null
+        ? <String, double>{}
+        : (jsonDecode(rawSiteSftValues) as Map<String, dynamic>).map(
+            (key, value) => MapEntry(key, (value as num).toDouble()),
+          );
+
     return LocalSnapshot(
       hasCustomCategories: hasCustomCategories,
       hasCustomSites: hasCustomSites,
       categories: categories,
       sites: sites,
       entries: entries,
+      siteSftValues: siteSftValues,
     );
   }
 
@@ -61,6 +72,7 @@ class ExpenseLocalStore {
     required List<String> categories,
     required List<String> sites,
     required List<ExpenseEntry> entries,
+    Map<String, double> siteSftValues = const {},
   }) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(
@@ -69,6 +81,12 @@ class ExpenseLocalStore {
     );
     await prefs.setString(categoriesKey, jsonEncode(categories));
     await prefs.setString(sitesKey, jsonEncode(sites));
+    await prefs.setString(
+      siteSftValuesKey,
+      jsonEncode(
+        siteSftValues.map((key, value) => MapEntry<String, dynamic>(key, value)),
+      ),
+    );
   }
 
   List<String> _deriveSitesFromEntries(List<ExpenseEntry> entries) {
