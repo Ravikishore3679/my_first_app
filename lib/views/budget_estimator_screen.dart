@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../core/theme/app_colors.dart';
-import '../models/expense_entry.dart';
 import '../viewmodels/expense_view_model.dart';
 
 class BudgetCategoryRow {
@@ -50,10 +49,12 @@ class _BudgetEstimatorScreenState extends State<BudgetEstimatorScreen> {
   List<BudgetCategoryRow> _categories = const [];
   final Map<String, Map<String, double>> _siteCategoryTotals = {};
 
+  List<String> get _availableSites => widget.viewModel.availableSites;
+
   @override
   void initState() {
     super.initState();
-    _selectedSite = widget.viewModel.sites.isNotEmpty ? widget.viewModel.sites.first : null;
+    _selectedSite = _availableSites.isNotEmpty ? _availableSites.first : null;
     _syncCategoriesForSelectedSite();
   }
 
@@ -63,7 +64,7 @@ class _BudgetEstimatorScreenState extends State<BudgetEstimatorScreen> {
     if (oldWidget.viewModel != widget.viewModel ||
         oldWidget.viewModel.entries.length != widget.viewModel.entries.length ||
         oldWidget.viewModel.sites.length != widget.viewModel.sites.length) {
-      final availableSites = widget.viewModel.sites;
+      final availableSites = _availableSites;
       if (_selectedSite == null || !availableSites.contains(_selectedSite)) {
         _selectedSite = availableSites.isNotEmpty ? availableSites.first : null;
       }
@@ -252,7 +253,7 @@ class _BudgetEstimatorScreenState extends State<BudgetEstimatorScreen> {
                                 labelText: 'SITE',
                                 prefixIcon: Icon(Icons.location_on_outlined),
                               ),
-                              items: widget.viewModel.sites
+                              items: _availableSites
                                   .map(
                                     (site) => DropdownMenuItem(
                                       value: site,
