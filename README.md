@@ -71,6 +71,22 @@ Google sign-in setup reminders:
 
 Without these values, the app automatically uses local storage only.
 
+## Deploy Bin Command
+
+Use the Dart bin script to bump the build number, build the release APK, and upload it to Firebase App Distribution:
+
+```bash
+dart run bin/deploy.dart
+```
+
+Before running it, make sure you have a `.env` file in the project root with at least:
+
+```txt
+FIREBASE_APP_ID=1:1234567890:android:abc123
+```
+
+The script reads `.env`, increments the version in `pubspec.yaml`, builds the Android APK, and then distributes it to the `qa-testers` group.
+
 ## Quick Run
 
 Use the saved VS Code launch profile or run:

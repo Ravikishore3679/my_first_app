@@ -71,6 +71,106 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
     );
   }
 
+  String _buildDailyReportText() {
+    final buffer = StringBuffer();
+    buffer.writeln('DAILY EXPENSE REPORT');
+    buffer.writeln('====================================');
+    buffer.writeln('Date: ${DateFormat('dd/MM/yyyy').format(DateTime.now())}');
+    buffer.writeln('Total Expense: Rs. ${vm.todayAmount}');
+    buffer.writeln('Entries: ${vm.todayEntries.length}');
+    buffer.writeln('');
+
+    for (final entry in vm.todayEntries) {
+      buffer.writeln('${entry.category} (${entry.site}): Rs. ${entry.amount}');
+      buffer.writeln('Receipt No.: ${entry.id}');
+      buffer.writeln('Date: ${entry.formattedDate}');
+      if (entry.description.trim().isNotEmpty) {
+        buffer.writeln('Description: ${entry.description.trim()}');
+      }
+      buffer.writeln('---');
+    }
+
+    return buffer.toString();
+  }
+
+  Future<void> _shareDailyReport() async {
+    await SharePlus.instance.share(
+      ShareParams(
+        text: _buildDailyReportText(),
+        subject: 'Daily Expense Report',
+      ),
+    );
+  }
+
+  Future<void> _printDailyReport() async {
+    final document = pw.Document();
+    final todayLabel = DateFormat('dd MMM yyyy').format(DateTime.now());
+
+    document.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(24),
+        build: (context) {
+          final widgets = <pw.Widget>[
+            pw.Text(
+              'Daily Expense Report',
+              style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
+            ),
+            pw.SizedBox(height: 8),
+            pw.Text('Date: $todayLabel', style: const pw.TextStyle(fontSize: 11)),
+            pw.Text(
+              'Total Expense: Rs. ${vm.todayAmount}',
+              style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
+            ),
+            pw.Text(
+              'Entries: ${vm.todayEntries.length}',
+              style: const pw.TextStyle(fontSize: 11),
+            ),
+            pw.SizedBox(height: 16),
+          ];
+
+          for (final entry in vm.todayEntries) {
+            widgets.add(
+              pw.Container(
+                margin: const pw.EdgeInsets.only(bottom: 10),
+                padding: const pw.EdgeInsets.all(12),
+                decoration: pw.BoxDecoration(
+                  border: pw.Border.all(color: PdfColors.grey300),
+                  borderRadius: pw.BorderRadius.circular(8),
+                ),
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text(
+                      '${entry.category} (${entry.site})',
+                      style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold),
+                    ),
+                    pw.SizedBox(height: 4),
+                    pw.Text('Amount: Rs. ${entry.amount}', style: const pw.TextStyle(fontSize: 10)),
+                    pw.Text('Receipt No.: ${entry.id}', style: const pw.TextStyle(fontSize: 10)),
+                    pw.Text('Date: ${entry.formattedDate}', style: const pw.TextStyle(fontSize: 10)),
+                    if (entry.description.trim().isNotEmpty)
+                      pw.Text(
+                        'Description: ${entry.description.trim()}',
+                        style: const pw.TextStyle(fontSize: 10),
+                      ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          return widgets;
+        },
+      ),
+    );
+
+    await Printing.layoutPdf(
+      name: 'daily_expense_report.pdf',
+      onLayout: (_) async => document.save(),
+    );
+  }
+
   Future<void> _showExpenseReceipt(ExpenseEntry entry) async {
     if (!mounted) return;
 
@@ -586,6 +686,23 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
                               ),
                             );
                           }),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 10,
+                            runSpacing: 10,
+                            children: [
+                              FilledButton.icon(
+                                onPressed: _printDailyReport,
+                                icon: const Icon(Icons.print_outlined),
+                                label: const Text('Print Daily Report'),
+                              ),
+                              OutlinedButton.icon(
+                                onPressed: _shareDailyReport,
+                                icon: const Icon(Icons.ios_share_outlined),
+                                label: const Text('Share Daily Report'),
+                              ),
+                            ],
+                          ),
                         ],
                       ],
                     ),
