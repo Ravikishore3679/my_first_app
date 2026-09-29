@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 
 import '../../models/expense_entry.dart';
 
@@ -13,7 +14,7 @@ class ExpenseDialog extends StatefulWidget {
 
   final List<String> categories;
   final List<String> sites;
-  final ValueChanged<ExpenseEntry> onSave;
+  final Future<void> Function(ExpenseEntry) onSave;
   final ExpenseEntry? existingEntry;
 
   @override
@@ -41,15 +42,18 @@ class _ExpenseDialogState extends State<ExpenseDialog> {
 
     final existingCategory = existing?.category.trim() ?? '';
     final hasExistingCategory =
-        existingCategory.isNotEmpty && widget.categories.contains(existingCategory);
+        existingCategory.isNotEmpty &&
+        widget.categories.contains(existingCategory);
     _selectedCategory = hasExistingCategory
         ? existingCategory
         : (widget.categories.isNotEmpty ? widget.categories.first : '');
 
     final existingSite = existing?.site.trim() ?? '';
-    final hasExistingSite = existingSite.isNotEmpty && widget.sites.contains(existingSite);
-    _selectedSite =
-        hasExistingSite ? existingSite : (widget.sites.isNotEmpty ? widget.sites.first : '');
+    final hasExistingSite =
+        existingSite.isNotEmpty && widget.sites.contains(existingSite);
+    _selectedSite = hasExistingSite
+        ? existingSite
+        : (widget.sites.isNotEmpty ? widget.sites.first : '');
   }
 
   @override
@@ -63,7 +67,9 @@ class _ExpenseDialogState extends State<ExpenseDialog> {
     final amount = int.tryParse(_amountController.text.trim());
     if (amount == null || amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter a valid amount greater than zero.')),
+        const SnackBar(
+          content: Text('Enter a valid amount greater than zero.'),
+        ),
       );
       return;
     }
@@ -91,15 +97,18 @@ class _ExpenseDialogState extends State<ExpenseDialog> {
             date: DateTime.now(),
           );
 
-    widget.onSave(entry);
+    unawaited(widget.onSave(entry));
     Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
-    final selectedCategoryValue =
-        widget.categories.contains(_selectedCategory) ? _selectedCategory : null;
-    final selectedSiteValue = widget.sites.contains(_selectedSite) ? _selectedSite : null;
+    final selectedCategoryValue = widget.categories.contains(_selectedCategory)
+        ? _selectedCategory
+        : null;
+    final selectedSiteValue = widget.sites.contains(_selectedSite)
+        ? _selectedSite
+        : null;
 
     return AlertDialog(
       title: Text(_isEdit ? 'Edit Expense' : 'Add Expense'),
@@ -110,7 +119,12 @@ class _ExpenseDialogState extends State<ExpenseDialog> {
             DropdownButtonFormField<String>(
               initialValue: selectedCategoryValue,
               items: widget.categories
-                  .map((category) => DropdownMenuItem(value: category, child: Text(category)))
+                  .map(
+                    (category) => DropdownMenuItem(
+                      value: category,
+                      child: Text(category),
+                    ),
+                  )
                   .toList(),
               onChanged: (value) {
                 if (value != null) {
@@ -126,7 +140,9 @@ class _ExpenseDialogState extends State<ExpenseDialog> {
             DropdownButtonFormField<String>(
               initialValue: selectedSiteValue,
               items: widget.sites
-                  .map((site) => DropdownMenuItem(value: site, child: Text(site)))
+                  .map(
+                    (site) => DropdownMenuItem(value: site, child: Text(site)),
+                  )
                   .toList(),
               onChanged: (value) {
                 if (value != null) {

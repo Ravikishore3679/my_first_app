@@ -438,16 +438,19 @@ class ExpenseViewModel extends ChangeNotifier {
     }
 
     buffer.writeln('');
-    buffer.writeln('Total Expense: ₹$filteredTotal');
+    buffer.writeln('Total Expense: Rs. $filteredTotal');
     buffer.writeln('');
     buffer.writeln('BREAKDOWN:');
     buffer.writeln('');
 
     for (final entry in filteredEntries) {
       buffer.writeln(
-        '${entry.category} (${entry.site}): ₹${entry.amount} - ${entry.description}',
+        '${entry.category} (${entry.site}): Rs. ${entry.amount} - ${entry.description}',
       );
-      buffer.writeln('Date: ${entry.formattedDate}');
+      buffer.writeln('Receipt No.: ${entry.id}');
+      buffer.writeln(
+        'Date: ${entry.formattedDate}',
+      );
       buffer.writeln('---');
     }
 
