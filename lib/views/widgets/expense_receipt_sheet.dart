@@ -192,7 +192,7 @@ class ExpenseReceiptSheet extends StatelessWidget {
                     FilledButton.icon(
                       onPressed: () async => onPrint(),
                       icon: const Icon(Icons.print_outlined),
-                      label: const Text('Print Receipt'),
+                      label: const Text('Share PDF Receipt'),
                       style: FilledButton.styleFrom(
                         minimumSize: const Size.fromHeight(52),
                         backgroundColor: kStonePrimary,

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:pdf/pdf.dart';
@@ -30,6 +32,61 @@ class ExpenseHomePage extends StatefulWidget {
 
 class _ExpenseHomePageState extends State<ExpenseHomePage> {
   ExpenseViewModel get vm => widget.viewModel;
+
+  PdfColor get _pdfStonePrimary => PdfColor.fromInt(kStonePrimary.value);
+  PdfColor get _pdfStoneSecondary => PdfColor.fromInt(kStoneSecondary.value);
+  PdfColor get _pdfStoneText => PdfColor.fromInt(kStoneText.value);
+  PdfColor get _pdfSandBackground => PdfColor.fromInt(kSandBackground.value);
+
+  Future<pw.ThemeData> _pdfTheme() async {
+    try {
+      final base = await PdfGoogleFonts.robotoRegular();
+      final bold = await PdfGoogleFonts.robotoBold();
+      return pw.ThemeData.withFont(base: base, bold: bold);
+    } catch (_) {
+      return pw.ThemeData.withFont(
+        base: pw.Font.helvetica(),
+        bold: pw.Font.helveticaBold(),
+      );
+    }
+  }
+
+  bool get _isMobilePlatform =>
+      !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS);
+
+  Future<void> _printOrSharePdf({
+    required String fileName,
+    required Future<Uint8List> Function() bytesBuilder,
+  }) async {
+    if (_isMobilePlatform) {
+      final bytes = await bytesBuilder();
+      await Printing.sharePdf(bytes: bytes, filename: fileName);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('PDF ready to share.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    try {
+      await Printing.layoutPdf(name: fileName, onLayout: (_) => bytesBuilder());
+    } catch (_) {
+      final bytes = await bytesBuilder();
+      await Printing.sharePdf(bytes: bytes, filename: fileName);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Print unavailable on this device. Opened share sheet instead.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
 
   @override
   void initState() {
@@ -103,7 +160,7 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
   }
 
   Future<void> _printDailyReport() async {
-    final document = pw.Document();
+    final document = pw.Document(theme: await _pdfTheme());
     final todayLabel = DateFormat('dd MMM yyyy').format(DateTime.now());
 
     document.addPage(
@@ -112,19 +169,38 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
         margin: const pw.EdgeInsets.all(24),
         build: (context) {
           final widgets = <pw.Widget>[
-            pw.Text(
-              'Daily Expense Report',
-              style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
+            pw.Container(
+              width: double.infinity,
+              padding: const pw.EdgeInsets.all(14),
+              decoration: pw.BoxDecoration(
+                color: _pdfStonePrimary,
+                borderRadius: pw.BorderRadius.circular(10),
+              ),
+              child: pw.Text(
+                'Daily Expense Report',
+                style: pw.TextStyle(
+                  fontSize: 20,
+                  fontWeight: pw.FontWeight.bold,
+                  color: PdfColors.white,
+                ),
+              ),
             ),
             pw.SizedBox(height: 8),
-            pw.Text('Date: $todayLabel', style: const pw.TextStyle(fontSize: 11)),
+            pw.Text(
+              'Date: $todayLabel',
+              style: pw.TextStyle(fontSize: 11, color: _pdfStoneText),
+            ),
             pw.Text(
               'Total Expense: Rs. ${vm.todayAmount}',
-              style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
+              style: pw.TextStyle(
+                fontSize: 14,
+                fontWeight: pw.FontWeight.bold,
+                color: _pdfStonePrimary,
+              ),
             ),
             pw.Text(
               'Entries: ${vm.todayEntries.length}',
-              style: const pw.TextStyle(fontSize: 11),
+              style: pw.TextStyle(fontSize: 11, color: _pdfStoneText),
             ),
             pw.SizedBox(height: 16),
           ];
@@ -135,7 +211,8 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
                 margin: const pw.EdgeInsets.only(bottom: 10),
                 padding: const pw.EdgeInsets.all(12),
                 decoration: pw.BoxDecoration(
-                  border: pw.Border.all(color: PdfColors.grey300),
+                  color: _pdfSandBackground,
+                  border: pw.Border.all(color: _pdfStoneSecondary, width: 0.6),
                   borderRadius: pw.BorderRadius.circular(8),
                 ),
                 child: pw.Column(
@@ -143,16 +220,29 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
                   children: [
                     pw.Text(
                       '${entry.category} (${entry.site})',
-                      style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold),
+                      style: pw.TextStyle(
+                        fontSize: 12,
+                        fontWeight: pw.FontWeight.bold,
+                        color: _pdfStonePrimary,
+                      ),
                     ),
                     pw.SizedBox(height: 4),
-                    pw.Text('Amount: Rs. ${entry.amount}', style: const pw.TextStyle(fontSize: 10)),
-                    pw.Text('Receipt No.: ${entry.id}', style: const pw.TextStyle(fontSize: 10)),
-                    pw.Text('Date: ${entry.formattedDate}', style: const pw.TextStyle(fontSize: 10)),
+                    pw.Text(
+                      'Amount: Rs. ${entry.amount}',
+                      style: pw.TextStyle(fontSize: 10, color: _pdfStoneText),
+                    ),
+                    pw.Text(
+                      'Receipt No.: ${entry.id}',
+                      style: pw.TextStyle(fontSize: 10, color: _pdfStoneText),
+                    ),
+                    pw.Text(
+                      'Date: ${entry.formattedDate}',
+                      style: pw.TextStyle(fontSize: 10, color: _pdfStoneText),
+                    ),
                     if (entry.description.trim().isNotEmpty)
                       pw.Text(
                         'Description: ${entry.description.trim()}',
-                        style: const pw.TextStyle(fontSize: 10),
+                        style: pw.TextStyle(fontSize: 10, color: _pdfStoneText),
                       ),
                   ],
                 ),
@@ -165,9 +255,9 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
       ),
     );
 
-    await Printing.layoutPdf(
-      name: 'daily_expense_report.pdf',
-      onLayout: (_) async => document.save(),
+    await _printOrSharePdf(
+      fileName: 'daily_expense_report.pdf',
+      bytesBuilder: () async => document.save(),
     );
   }
 
@@ -188,7 +278,7 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
   }
 
   Future<void> _printExpenseReceipt(ExpenseEntry entry) async {
-    final document = pw.Document();
+    final document = pw.Document(theme: await _pdfTheme());
     final dateLabel = DateFormat('dd MMM yyyy, hh:mm a').format(entry.date);
 
     pw.Widget receiptRow(String label, String value) {
@@ -204,12 +294,15 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
                 style: pw.TextStyle(
                   fontSize: 9,
                   fontWeight: pw.FontWeight.bold,
-                  color: PdfColors.grey700,
+                  color: _pdfStonePrimary,
                 ),
               ),
             ),
             pw.Expanded(
-              child: pw.Text(value, style: const pw.TextStyle(fontSize: 10)),
+              child: pw.Text(
+                value,
+                style: pw.TextStyle(fontSize: 10, color: _pdfStoneText),
+              ),
             ),
           ],
         ),
@@ -224,7 +317,8 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
           return pw.Container(
             padding: const pw.EdgeInsets.all(14),
             decoration: pw.BoxDecoration(
-              border: pw.Border.all(color: PdfColors.grey300, width: 1),
+              color: PdfColors.white,
+              border: pw.Border.all(color: _pdfStoneSecondary, width: 0.8),
               borderRadius: pw.BorderRadius.circular(12),
             ),
             child: pw.Column(
@@ -238,7 +332,7 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
                     vertical: 10,
                   ),
                   decoration: pw.BoxDecoration(
-                    color: PdfColors.brown900,
+                    color: _pdfStonePrimary,
                     borderRadius: pw.BorderRadius.circular(10),
                   ),
                   child: pw.Column(
@@ -273,7 +367,7 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
                         style: pw.TextStyle(
                           fontSize: 26,
                           fontWeight: pw.FontWeight.bold,
-                          color: PdfColors.brown800,
+                          color: _pdfStonePrimary,
                         ),
                       ),
                       pw.SizedBox(height: 4),
@@ -281,21 +375,21 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
                         'Saved successfully',
                         style: pw.TextStyle(
                           fontSize: 9,
-                          color: PdfColors.grey600,
+                          color: _pdfStoneText,
                         ),
                       ),
                     ],
                   ),
                 ),
                 pw.SizedBox(height: 16),
-                pw.Divider(color: PdfColors.grey400, thickness: 0.8),
+                pw.Divider(color: _pdfStoneSecondary, thickness: 0.7),
                 pw.SizedBox(height: 8),
                 receiptRow('Category', entry.category),
                 receiptRow('Site', entry.site),
                 receiptRow('Date', dateLabel),
                 if (entry.description.trim().isNotEmpty)
                   receiptRow('Description', entry.description.trim()),
-                pw.Divider(color: PdfColors.grey400, thickness: 0.8),
+                pw.Divider(color: _pdfStoneSecondary, thickness: 0.7),
                 pw.SizedBox(height: 8),
                 pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
@@ -305,10 +399,13 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
                       style: pw.TextStyle(
                         fontSize: 9,
                         fontWeight: pw.FontWeight.bold,
-                        color: PdfColors.grey700,
+                        color: _pdfStonePrimary,
                       ),
                     ),
-                    pw.Text(entry.id, style: const pw.TextStyle(fontSize: 9)),
+                    pw.Text(
+                      entry.id,
+                      style: pw.TextStyle(fontSize: 9, color: _pdfStoneText),
+                    ),
                   ],
                 ),
                 pw.SizedBox(height: 10),
@@ -318,7 +415,7 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
                     style: pw.TextStyle(
                       fontSize: 10,
                       fontWeight: pw.FontWeight.bold,
-                      color: PdfColors.brown700,
+                      color: _pdfStonePrimary,
                     ),
                   ),
                 ),
@@ -329,9 +426,9 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
       ),
     );
 
-    await Printing.layoutPdf(
-      name: 'expense_receipt_${entry.id}.pdf',
-      onLayout: (_) async => document.save(),
+    await _printOrSharePdf(
+      fileName: 'expense_receipt_${entry.id}.pdf',
+      bytesBuilder: () async => document.save(),
     );
   }
 
@@ -426,6 +523,51 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
     );
   }
 
+  Future<void> _showSettingsSheet() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(8, 8, 8, 14),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const ListTile(
+                  title: Text(
+                    'Settings',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                  ),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.category_outlined),
+                  title: const Text('Manage Categories'),
+                  subtitle: const Text('Add or delete categories'),
+                  onTap: () {
+                    Navigator.of(sheetContext).pop();
+                    _showManageCategoriesDialog();
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.location_on_outlined),
+                  title: const Text('Manage Sites'),
+                  subtitle: const Text('Add or delete sites'),
+                  onTap: () {
+                    Navigator.of(sheetContext).pop();
+                    _showManageSitesDialog();
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> _shareReport() async {
     SharePlus.instance.share(
       ShareParams(
@@ -436,30 +578,168 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
   }
 
   Future<void> _printReport() async {
-    final document = pw.Document();
-    final reportText = vm.buildReportText();
+    final document = pw.Document(theme: await _pdfTheme());
+    final reportDate = DateFormat('dd/MM/yyyy').format(DateTime.now());
 
     document.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
         margin: const pw.EdgeInsets.all(24),
-        build: (context) => [
-          pw.Text(
-            'Construction Expense Report',
-            style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
-          ),
-          pw.SizedBox(height: 10),
-          pw.Text(
-            reportText,
-            style: const pw.TextStyle(fontSize: 10, height: 1.4),
-          ),
-        ],
+        build: (context) {
+          final widgets = <pw.Widget>[
+            pw.Container(
+              width: double.infinity,
+              padding: const pw.EdgeInsets.all(14),
+              decoration: pw.BoxDecoration(
+                color: _pdfStonePrimary,
+                borderRadius: pw.BorderRadius.circular(10),
+              ),
+              child: pw.Text(
+                'Construction Expense Report',
+                style: pw.TextStyle(
+                  fontSize: 20,
+                  fontWeight: pw.FontWeight.bold,
+                  color: PdfColors.white,
+                ),
+              ),
+            ),
+            pw.SizedBox(height: 10),
+            pw.Container(
+              width: double.infinity,
+              padding: const pw.EdgeInsets.all(10),
+              decoration: pw.BoxDecoration(
+                color: _pdfSandBackground,
+                border: pw.Border.all(color: _pdfStoneSecondary, width: 0.6),
+                borderRadius: pw.BorderRadius.circular(8),
+              ),
+              child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text(
+                    'Date: $reportDate',
+                    style: pw.TextStyle(fontSize: 10, color: _pdfStoneText),
+                  ),
+                  pw.Text(
+                    'Total Expense: Rs. ${vm.filteredTotal}',
+                    style: pw.TextStyle(
+                      fontSize: 12,
+                      fontWeight: pw.FontWeight.bold,
+                      color: _pdfStonePrimary,
+                    ),
+                  ),
+                  pw.Text(
+                    'Entries: ${vm.filteredEntries.length}',
+                    style: pw.TextStyle(fontSize: 10, color: _pdfStoneText),
+                  ),
+                  if (vm.filterCategory != null)
+                    pw.Text(
+                      'Category: ${vm.filterCategory}',
+                      style: pw.TextStyle(fontSize: 10, color: _pdfStoneText),
+                    ),
+                  if (vm.filterSites.isNotEmpty)
+                    pw.Text(
+                      'Sites: ${(vm.filterSites.toList()..sort()).join(', ')}',
+                      style: pw.TextStyle(fontSize: 10, color: _pdfStoneText),
+                    ),
+                ],
+              ),
+            ),
+            pw.SizedBox(height: 12),
+          ];
+
+          if (vm.filteredEntries.isEmpty) {
+            widgets.add(
+              pw.Text(
+                'No expenses match your filters.',
+                style: pw.TextStyle(fontSize: 10, color: _pdfStoneText),
+              ),
+            );
+            return widgets;
+          }
+
+          pw.Widget buildEntryCard(ExpenseEntry entry, {double? width}) {
+            return pw.Container(
+              width: width,
+              margin: const pw.EdgeInsets.only(bottom: 8),
+              padding: const pw.EdgeInsets.all(10),
+              decoration: pw.BoxDecoration(
+                color: PdfColors.white,
+                border: pw.Border.all(color: _pdfStoneSecondary, width: 0.5),
+                borderRadius: pw.BorderRadius.circular(6),
+              ),
+              child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text(
+                    '${entry.category} (${entry.site})',
+                    style: pw.TextStyle(
+                      fontSize: 11,
+                      fontWeight: pw.FontWeight.bold,
+                      color: _pdfStonePrimary,
+                    ),
+                  ),
+                  pw.SizedBox(height: 6),
+                  pw.Row(
+                    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Expanded(
+                        child: pw.Text(
+                          'Amount: Rs. ${entry.amount}',
+                          style: pw.TextStyle(
+                            fontSize: 10,
+                            color: _pdfStoneText,
+                            fontWeight: pw.FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      pw.SizedBox(width: 12),
+                      pw.Text(
+                        'Date: ${entry.formattedDate}',
+                        style: pw.TextStyle(fontSize: 10, color: _pdfStoneText),
+                      ),
+                    ],
+                  ),
+                  pw.SizedBox(height: 2),
+                  pw.Text(
+                    'Receipt No.: ${entry.id}',
+                    style: pw.TextStyle(fontSize: 10, color: _pdfStoneText),
+                  ),
+                  if (entry.description.trim().isNotEmpty)
+                    pw.SizedBox(height: 2),
+                  if (entry.description.trim().isNotEmpty)
+                    pw.Text(
+                      'Description: ${entry.description.trim()}',
+                      style: pw.TextStyle(fontSize: 10, color: _pdfStoneText),
+                    ),
+                ],
+              ),
+            );
+          }
+
+          if (vm.filteredEntries.length == 1) {
+            widgets.add(buildEntryCard(vm.filteredEntries.first, width: double.infinity));
+          } else {
+            const cardWidth = 260.0;
+            widgets.add(
+              pw.Wrap(
+                spacing: 10,
+                runSpacing: 0,
+                children: vm.filteredEntries
+                    .map((entry) => buildEntryCard(entry, width: cardWidth))
+                    .toList(),
+              ),
+            );
+          }
+
+          return widgets;
+        },
       ),
     );
 
-    await Printing.layoutPdf(
-      name: 'construction_expense_report.pdf',
-      onLayout: (_) async => document.save(),
+    await _printOrSharePdf(
+      fileName: 'construction_expense_report.pdf',
+      bytesBuilder: () async => document.save(),
     );
   }
 
@@ -513,7 +793,7 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        '₹${vm.totalAmount}',
+                        'Rs. ${vm.totalAmount}',
                         style: const TextStyle(
                           fontSize: 36,
                           fontWeight: FontWeight.w800,
@@ -550,7 +830,7 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
                           const SizedBox(height: 10),
                           DashboardMiniStatCard(
                             title: 'Today',
-                            value: '₹${vm.todayAmount}',
+                            value: 'Rs. ${vm.todayAmount}',
                             icon: Icons.today,
                             color: const Color(0xFFDC2626),
                           ),
@@ -558,7 +838,7 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
                           DashboardMiniStatCard(
                             title: 'Overall Cost/SFT',
                             value:
-                                '₹${vm.overallCostPerSft.toStringAsFixed(2)}',
+                              'Rs. ${vm.overallCostPerSft.toStringAsFixed(2)}',
                             icon: Icons.straighten,
                             color: const Color(0xFF059669),
                           ),
@@ -579,7 +859,7 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
                         Expanded(
                           child: DashboardMiniStatCard(
                             title: 'Today',
-                            value: '₹${vm.todayAmount}',
+                            value: 'Rs. ${vm.todayAmount}',
                             icon: Icons.today,
                             color: const Color(0xFFDC2626),
                           ),
@@ -589,7 +869,7 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
                           child: DashboardMiniStatCard(
                             title: 'Overall Cost/SFT',
                             value:
-                                '₹${vm.overallCostPerSft.toStringAsFixed(2)}',
+                              'Rs. ${vm.overallCostPerSft.toStringAsFixed(2)}',
                             icon: Icons.straighten,
                             color: const Color(0xFF059669),
                           ),
@@ -637,7 +917,7 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
                           )
                         else ...[
                           Text(
-                            'Total: ₹${vm.todayAmount}',
+                            'Total: Rs. ${vm.todayAmount}',
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -676,7 +956,7 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
                                     ),
                                   ),
                                   Text(
-                                    '₹${entry.amount}',
+                                    'Rs. ${entry.amount}',
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       color: kStonePrimary,
@@ -849,7 +1129,7 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                '₹${entry.amount}',
+                                'Rs. ${entry.amount}',
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 15,
@@ -911,22 +1191,44 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
                   Expanded(
                     child: DropdownButton<String?>(
                       isExpanded: true,
-                      value: vm.filterSite,
+                      value: null,
                       items: [
                         const DropdownMenuItem(
                           value: null,
-                          child: Text('All Sites'),
+                          child: Text('Select Sites'),
                         ),
                         ...vm.availableSites.map(
                           (site) =>
                               DropdownMenuItem(value: site, child: Text(site)),
                         ),
                       ],
-                      onChanged: vm.setFilterSite,
+                      onChanged: (value) {
+                        if (value == null) return;
+                        vm.toggleFilterSite(value);
+                      },
                     ),
                   ),
                 ],
               ),
+              if (vm.filterSites.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: (vm.filterSites.toList()..sort())
+                        .map(
+                          (site) => FilterChip(
+                            label: Text(site),
+                            selected: true,
+                            onSelected: (_) => vm.toggleFilterSite(site),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ),
+              ],
               const SizedBox(height: 10),
               Wrap(
                 spacing: 8,
@@ -1024,11 +1326,11 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
                               ),
                             ),
                           ),
-                        if (vm.filterSite != null)
+                        if (vm.filterSites.isNotEmpty)
                           Padding(
                             padding: const EdgeInsets.only(top: 4.0),
                             child: Text(
-                              'Site: ${vm.filterSite}',
+                              'Sites: ${(vm.filterSites.toList()..sort()).join(', ')}',
                               style: const TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
@@ -1186,25 +1488,14 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
               ),
               if (vm.selectedIndex == 2)
                 IconButton(
-                  icon: const Icon(Icons.print),
-                  tooltip: 'Print report',
-                  onPressed: _printReport,
-                ),
-              if (vm.selectedIndex == 2)
-                IconButton(
                   icon: const Icon(Icons.ios_share),
                   tooltip: 'Share report',
                   onPressed: _shareReport,
                 ),
               IconButton(
-                icon: const Icon(Icons.category),
-                tooltip: 'Manage categories',
-                onPressed: _showManageCategoriesDialog,
-              ),
-              IconButton(
-                icon: const Icon(Icons.location_on),
-                tooltip: 'Manage sites',
-                onPressed: _showManageSitesDialog,
+                icon: const Icon(Icons.settings),
+                tooltip: 'Settings',
+                onPressed: _showSettingsSheet,
               ),
             ],
           ),

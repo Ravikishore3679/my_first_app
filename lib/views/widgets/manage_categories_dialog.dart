@@ -22,6 +22,33 @@ class _ManageCategoriesDialogState extends State<ManageCategoriesDialog> {
   final TextEditingController _newCatController = TextEditingController();
   late List<String> _localCategories;
 
+  Future<void> _confirmAndDeleteCategory(String category) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Delete Category?'),
+          content: Text('Are you sure you want to delete "$category"?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              style: FilledButton.styleFrom(backgroundColor: Colors.red),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldDelete != true) return;
+    widget.onDelete(category);
+    setState(() => _localCategories.remove(category));
+  }
+
   @override
   void initState() {
     super.initState();
@@ -91,10 +118,7 @@ class _ManageCategoriesDialogState extends State<ManageCategoriesDialog> {
                     title: Text(category),
                     trailing: IconButton(
                       icon: const Icon(Icons.delete_outline, color: Colors.red),
-                      onPressed: () {
-                        widget.onDelete(category);
-                        setState(() => _localCategories.remove(category));
-                      },
+                      onPressed: () => _confirmAndDeleteCategory(category),
                     ),
                     contentPadding: EdgeInsets.zero,
                   );

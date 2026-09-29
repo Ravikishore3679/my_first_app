@@ -445,7 +445,7 @@ class _BudgetEstimatorScreenState extends State<BudgetEstimatorScreen> {
                             ),
                           ),
                           Text(
-                            '₹${_formatNumber(_grandTotal)}',
+                            'Rs. ${_formatNumber(_grandTotal)}',
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w700,

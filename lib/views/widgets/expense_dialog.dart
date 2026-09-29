@@ -158,7 +158,7 @@ class _ExpenseDialogState extends State<ExpenseDialog> {
             TextField(
               controller: _amountController,
               decoration: const InputDecoration(
-                labelText: 'Amount (₹)',
+                labelText: 'Amount (Rs.)',
                 border: OutlineInputBorder(),
               ),
               keyboardType: TextInputType.number,

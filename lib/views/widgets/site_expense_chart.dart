@@ -82,7 +82,7 @@ class _SiteBarRow extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  '₹$amount',
+                  'Rs. $amount',
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 if (perSft != null)
@@ -99,7 +99,7 @@ class _SiteBarRow extends StatelessWidget {
                         ),
                       ),
                       child: Text(
-                        '₹${perSft!.toStringAsFixed(2)}/SFT',
+                        'Rs. ${perSft!.toStringAsFixed(2)}/SFT',
                         style: const TextStyle(
                           fontSize: 11,
                           color: kStonePrimary,

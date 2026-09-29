@@ -35,7 +35,7 @@ class ExpenseViewModel extends ChangeNotifier {
   String? _lastSignedInUserId;
 
   String? _filterCategory;
-  String? _filterSite;
+  final Set<String> _filterSites = <String>{};
   DateTime? _filterStartDate;
   DateTime? _filterEndDate;
 
@@ -47,7 +47,7 @@ class ExpenseViewModel extends ChangeNotifier {
   bool get loading => _loading;
 
   String? get filterCategory => _filterCategory;
-  String? get filterSite => _filterSite;
+  Set<String> get filterSites => Set.unmodifiable(_filterSites);
   DateTime? get filterStartDate => _filterStartDate;
   DateTime? get filterEndDate => _filterEndDate;
 
@@ -151,7 +151,7 @@ class ExpenseViewModel extends ChangeNotifier {
     return _entries.where((e) {
       final matchesCategory =
           _filterCategory == null || e.category == _filterCategory;
-      final matchesSite = _filterSite == null || e.site == _filterSite;
+        final matchesSite = _filterSites.isEmpty || _filterSites.contains(e.site);
       var matchesDate = true;
 
       if (_filterStartDate != null) {
@@ -394,12 +394,23 @@ class ExpenseViewModel extends ChangeNotifier {
 
   void setFilterCategory(String? value) {
     _filterCategory = value;
-    _filterSite = null;
+    _filterSites.clear();
     notifyListeners();
   }
 
-  void setFilterSite(String? value) {
-    _filterSite = value;
+  void toggleFilterSite(String site) {
+    final trimmed = site.trim();
+    if (trimmed.isEmpty) return;
+    if (_filterSites.contains(trimmed)) {
+      _filterSites.remove(trimmed);
+    } else {
+      _filterSites.add(trimmed);
+    }
+    notifyListeners();
+  }
+
+  void clearFilterSites() {
+    _filterSites.clear();
     notifyListeners();
   }
 
@@ -415,7 +426,7 @@ class ExpenseViewModel extends ChangeNotifier {
 
   void clearFilters() {
     _filterCategory = null;
-    _filterSite = null;
+    _filterSites.clear();
     _filterStartDate = null;
     _filterEndDate = null;
     notifyListeners();
@@ -430,6 +441,10 @@ class ExpenseViewModel extends ChangeNotifier {
 
     if (_filterCategory != null) {
       buffer.writeln('Category: $_filterCategory');
+    }
+    if (_filterSites.isNotEmpty) {
+      final sites = _filterSites.toList()..sort();
+      buffer.writeln('Sites: ${sites.join(', ')}');
     }
     if (_filterStartDate != null && _filterEndDate != null) {
       buffer.writeln(
